@@ -1,3 +1,5 @@
+autoscale: true
+
 ![inline](https://raw.githubusercontent.com/wiki/facebook/react/react-logo-1000-transparent.png)
 
 # Introduction to React.js
@@ -117,12 +119,133 @@ class ArticleList extends Component {
 
 ---
 
+# Handling Input
+
+Let's keep running with this example. let's say we can click on an article to mark it as "read".
+
+We update our state in `ArticleList` to have a `read` boolean.
+
+```js
+class ArticleList extends Component {
+  constructor() {
+    this.state = {
+      articles = [
+        { id: 'a', title: 'A Fascinating Look At Shoes', read: false },
+        { id: 'b', title: 'A Quick Word from Smelly Pete', read: false },
+        { id: 'c', title: 'The Weather: It sucks', read: false }
+      ]
+    }
+  }
+  // ...
+}
+```
+
+---
+
+To mark an article as 'read', you might try something like this:
+
+```js
+class Article extends Component {
+  markAsRead() {
+    this.props.read = true;
+  }
+
+  render() {
+    return (
+      <div className="article" onClick={this.markAsRead}>
+        <h2>{ this.props.title }</h2>
+      </div>
+    );
+  }
+}
+```
+
+The problem, though, is that a component *cannot modify its props*.
+
+---
+
 # State Vs. Props
 
-The `<Article>` component gets its data from its "props".
+The `<Article>` component gets its data from "props" - the "properties" provided.
 
 Props are passed down from the parent, and they are immutable inside the component.
 
 `<ArticleList>` gets its data from "state".
 
 State is a reactive data source that causes re-renders when it changes.
+
+---
+
+# The right way to do it
+
+```js
+class ArticleList extends Component {
+  constructor() { /* Stuff here */ }
+
+  markAsRead(articleId) {
+    let articleIndex = this.state.articles.findIndex( a => a.id === articleId );
+    let newArticles  = this.state.articles.slice();
+    newArticles[articleIndex].read = true;
+
+    this.setState({ articles: newArticles });
+  }
+
+  render() { /* Stuff here */ }
+
+  renderArticle(article) {
+    return <Article title={article.title} key={article.id} handleClick={this.markAsRead} />;
+  }
+}
+```
+
+---
+
+```js
+class Article extends Component {
+  render() {
+    return (
+      <div className="article" onClick={ () => this.props.markAsRead(this.props.article.id) }>
+        <h2>{ this.props.title }</h2>
+      </div>
+    );
+  }
+}
+
+```
+
+---
+
+# The Benefit of One-Way Data Flow
+All of your logic to change a piece of state lives in *one place*.
+
+```js
+class ArticleList extends Component {
+  markAsRead(articleId) { /* Stuff */ }
+
+  leaveComment(articleId, commentText) { /* Stuff */ }
+
+  setFavourite(articleId) { /* Stuff */ }
+
+  reportSpam(articleId) { /* Stuff */ }
+
+  share(articleId, shareMethod) { /* Stuff */ }
+}
+```
+
+---
+
+# *Redux* makes this more manageable
+
+---
+
+Redux keeps all of your application's state in a single immutable object.
+
+To change the state, you dispatch an *action* that describes the change.
+
+Functions called *reducers* create the new state based on the old state + the action.
+
+This state then gets passed down through your components for React to do its thing.
+
+---
+
+It also
